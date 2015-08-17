@@ -1,0 +1,40 @@
+{
+  "name": "GitterSmsBridge",
+  "version": "0.9.0",
+  "description": "SMS to IRC bridge for gitter",
+  "main": "smsBridge.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jtrinklein/GitterSmsBridge.git"
+  },
+  "keywords": [
+    "sms",
+    "bridge",
+    "irc",
+    "gitter"
+  ],
+  "author": "James Trinklein <james.trinklein@changepoint.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jtrinklein/GitterSmsBridge/issues"
+  },
+  "homepage": "https://github.com/jtrinklein/GitterSmsBridge",
+  "dependencies": {
+    "body-parser": "^1.13.3",
+    "express": "^4.13.3",
+    "express-json": "^1.0.0",
+    "express-session": "^1.11.3",
+    "jade": "^1.11.0",
+    "lodash": "^3.10.1",
+    "mongodb": "^2.0.40",
+    "node-gitter": "^1.2.8",
+    "passport": "^0.2.2",
+    "passport-oauth2": "^1.1.2",
+    "q": "^1.4.1",
+    "restify": "^3.0.3",
+    "twilio": "^2.2.1"
+  }
+}

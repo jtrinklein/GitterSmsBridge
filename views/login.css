@@ -1,0 +1,36 @@
+* {
+    font-family: Arial, Helvetica, Sans-Serif;
+    font-size: 12pt;
+}
+
+.content {
+    width: 75%;
+    margin: auto;
+}
+
+.login {
+    width: 45%;
+    display: inline-block;
+    float: left;
+    border-right: 1px solid gray;
+}
+.register {
+    width: 45%;
+    float: right;
+    display: inline-block;
+}
+.info {
+    clear: both;
+    padding: 20px;
+    font-size: 0.8em;
+    margin: auto;
+    width: 230px;
+}
+input:valid + i.fa:after {
+    content: "\f00c";
+    color: #383;
+}
+input:invalid + i.fa:after {
+    content: "\f00d";
+    color: #833;
+}
