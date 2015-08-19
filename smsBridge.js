@@ -13,11 +13,15 @@ var express = require('express'),
     logger = new Logger('api'),
     Q = require('q'),
     db = require('./dbClient'),
-    twilio = require('twilio')(auth.sid, auth.token);
+    twilio = require('twilio')(auth.sid, auth.token),
+    mustache = require('mustache-express'),
+    path = require('path');
  
 var smsNumber = process.env['SMS_NUMBER'] || '4252506802';
 var sessionSecret = process.env['SESSION_SECRET'] || 'keyboard cat';
 
+server.use(express.static(path.join(__dirname, 'public')));
+server.engine('mustache', mustache());
 server.use(json());
 server.use(bodyParser.urlencoded({extended: true}));
 server.use(bodyParser.json());
@@ -174,7 +178,7 @@ server.get('/gitter/home', function (req, res, done) {
                         .value();
                     var kw = data.keywords || [];
 
-                    res.render('roomlist.jade', {
+                    res.render('roomlist.mustache', {
                         keywords: kw.join(', '),
                         activeRoom: data.activeRoom,
                         rooms: rooms
@@ -279,9 +283,52 @@ server.get('/gitter/rooms/:roomId/unsubscribe', function(req, res, done) {
 });
 
 server.get('/gitter', function(req, res) {
-    res.render('login.jade', {smsNumber: smsNumber});
+    res.render('login.mustache', {phone: smsNumber});
 });
 
+server.get('/test/:page', function(req, res) {
+    var page = req.params.page;
+    switch(page) {
+    case 'login':
+        res.render('login.mustache', {phone: '1231231234'});
+        break;
+    case 'nohome':
+        res.render('roomlist.mustache', {
+            rooms: [
+                {name:'test/room1', id: 'testing1'},
+                {name:'test/room2', id: 'testing2'},
+                {name:'test/room3', id: 'testing3'},
+                {name:'test/room4', id: 'testing4'},
+                {name:'test/room5', id: 'testing5'},
+                {name:'test/room6', id: 'testing6'},
+                {name:'test/room7', id: 'testing7'},
+                {name:'test/room8', id: 'testing8'},
+                {name:'test/room9', id: 'testing9'},
+                {name:'test/room10', id: 'testing10'}
+            ],
+            keywords: '@user, alert, ping'
+        });
+        break;
+    case 'home':
+        res.render('roomlist.mustache', {
+            rooms: [
+                {name:'test/room1', id: 'testing1'},
+                {name:'test/room2', id: 'testing2'},
+                {name:'test/room3', id: 'testing3'},
+                {name:'test/room4', id: 'testing4'},
+                {name:'test/room5', id: 'testing5'},
+                {name:'test/room6', id: 'testing6'},
+                {name:'test/room7', id: 'testing7'},
+                {name:'test/room8', id: 'testing8'},
+                {name:'test/room9', id: 'testing9'},
+                {name:'test/room10', id: 'testing10'}
+            ],
+            activeRoom: { name: 'test/active'},
+            keywords: '@user, alert, ping'
+        });
+        break;
+    }
+});
 server.post('/gitter/login', function(req, res) {
     var phone = req.body.phone;
 

@@ -10,18 +10,19 @@ var client = require('mongodb').MongoClient,
 var url = process.env['MONGO_URL'] || 'mongodb://localhost:27017/gsms';
 
 logger.info('connecting to db');
-client.connect(url, function(err, db) {
 
-    if(err) {
-        logger.error(err);
+function getCollection() {
+    if(collection) {
+        return Q.resolve(collection);
     }
-    logger.info('connected to db!');
-    collection = db.collection('users');
-    //upsert = Promise.denodeify(collection.update);
-    //retrieve = Promise.denodeify(collection.find);
-    //remove = Promise.denodeify(collection.remove);
-});
 
+    return Q.ninvoke(client, 'connect', url)
+        .then(function(db) {
+            logger.info('connected to db!');
+            collection = db.collection('users');
+            return collection;
+        },logger.error);
+}
 
 function serializeToDbObject(userData) {
     var data = userData || {};
@@ -55,15 +56,13 @@ function deserializeToUserObject(dbObj) {
 
 function persistUserData(phone, userData) {
     logger.info('trying to persist user data');
-    if(!collection) {
-        logger.error('not connected to db');
-        return Q.reject('not connected');
-    }
-
-
     var data = serializeToDbObject(userData);
-    //return upsert({phone: userData.phone}, data, {upsert: true})
-    return Q.ninvoke(collection,'update', {phone: phone}, data, {upsert: true})
+
+    return getCollection()
+        .then(function(c) {
+            return Q.ninvoke(c, 'update',
+                    {phone: phone}, data, {upsert: true});
+        })
         .then(function(data) {
             logger.info('got user record: ' + util.inspect(data));
             return data && data[0];
@@ -73,12 +72,10 @@ function persistUserData(phone, userData) {
 function retrieveUserData(phone) {
     logger.info('getting user data');
 
-    if(!collection) {
-        logger.error('not connected to db!');
-        return Q.reject('not connected');
-    }
-
-    return Q.ninvoke(collection.find({phone: phone}), 'toArray')
+    return getCollection()
+        .then(function(c) {
+            return Q.ninvoke(c.find({phone: phone}), 'toArray');
+        })
         .then(function(data) {
             var user = data && data[0];
             logger.info('got user record: ' + util.inspect(user));
@@ -87,11 +84,10 @@ function retrieveUserData(phone) {
 }
 
 function removeUserRecord(phone) {
-    if(!collection) {
-        logger.error('not connected to db!');
-        return Q.reject('not connected');
-    }
-    return Q.ninvoke(collection, 'remove', {phone: phone})
+    return getCollection()
+        .then(function(c) {
+            return Q.ninvoke(c, 'remove', {phone: phone});
+        })
         .then(function(data) {
             logger.info('removed user record: ' + util.inspect(data));
             return data && data[0];

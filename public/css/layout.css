@@ -1,0 +1,10 @@
+* {
+    font-family: Arial,Helvetica,Sans-serif;
+    font-size: 12pt;
+    box-sizing: border-box;
+    clear: both;
+}
+.quarter-wide {
+    width: 25%;
+    display: inline-block;
+}

@@ -1,30 +1,19 @@
-* {
-    font-family: Arial, Helvetica, Sans-Serif;
-    font-size: 12pt;
-}
-
 .content {
     width: 75%;
     margin: auto;
 }
 
 .login {
-    width: 45%;
-    display: inline-block;
-    float: left;
     border-right: 1px solid gray;
 }
 .register {
-    width: 45%;
-    float: right;
-    display: inline-block;
+    padding-left: 30px
 }
 .info {
-    clear: both;
-    padding: 20px;
-    font-size: 0.8em;
+    width: 25%;
     margin: auto;
-    width: 230px;
+    padding-top: 25px;
+    font-size: 0.8em;
 }
 input:valid + i.fa:after {
     content: "\f00c";

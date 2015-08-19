@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="/css/layout.css"/>
+        <link rel="stylesheet" type="text/css" href="/css/login.css"/>
+        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.css" />
+    </head>
+    <body>
+        <div class="content">
+            <div class="quarter-wide"></div>
+            <div class="quarter-wide">
+                <div class="login">
+                    <h3>Log In</h3>
+                    <form name="login" method="POST" action="/gitter/login">
+                        <div class="input-row">
+                            <label>Phone:</label><input type="tel" name="phone" pattern="\d{10}" required="" value="" title="10 digit phone number. (Format: 1110001234)">
+                        </div>
+                        <button type="submit">login</button>
+                    </form>
+                </div>
+            </div>
+            <div class="quarter-wide">
+                <div class="register">
+                    <h3>Register</h3>
+                    <form name="register" method="POST" action="/gitter/register">
+                        <div class="input-row">
+                            <label>Phone:</label><input type="tel" name="phone" pattern="\d{10}" required="" value="" title="10 digit phone number. (Format: 1110001234)"><i class="fa"></i>
+                        </div>
+                        <button type="submit">register</button>
+                    </form>
+                </div>
+            </div>
+            <div class="info">Phone number for SMS is {{phone}}</div>
+        </div>
+    </body>
+</html>
