@@ -9,13 +9,13 @@ var client = require('mongodb').MongoClient,
 
 var url = process.env['MONGO_URL'] || 'mongodb://localhost:27017/gsms';
 
-logger.info('connecting to db');
 
 function getCollection() {
     if(collection) {
         return Q.resolve(collection);
     }
 
+    logger.info('connecting to db');
     return Q.ninvoke(client, 'connect', url)
         .then(function(db) {
             logger.info('connected to db!');
@@ -83,6 +83,20 @@ function retrieveUserData(phone) {
         });
 }
 
+function retrieveAllUserData() {
+    logger.info('getting all user data');
+
+    return getCollection()
+        .then(function(c) {
+            return Q.ninvoke(c.find(), 'toArray');
+        })
+        .then(function(data) {
+            logger.info('found ' + data.length + ' user records');
+            
+            return data.map(deserializeToUserObject);
+        });
+}
+
 function removeUserRecord(phone) {
     return getCollection()
         .then(function(c) {
@@ -97,6 +111,7 @@ function removeUserRecord(phone) {
 module.exports = {
     persist: persistUserData,
     retrieve: retrieveUserData,
+    retrieveAll: retrieveAllUserData,
     remove: removeUserRecord
 };
 

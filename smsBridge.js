@@ -56,14 +56,47 @@ function deleteUserData(phone, session) {
     db.remove(phone);
 }
 
-function shouldSendSms(phone, roomMessage) {
-    var userData = getUserData(phone);
+function shouldSendSms(userData, roomMessage) {
     var keywords = userData.keywords;
     var fromSelf = roomMessage.model.fromUser.username === userData.username;
     var containsKeyword = _.any(keywords, function(kw) {
         return _.includes(roomMessage.model.text, kw);
     });
     return !fromSelf && (keywords.length === 0 || containsKeyword);
+}
+
+function buildMessageFromGitterToSms(userData, roomMessage) {
+    var fromUsername = roomMessage.model.fromUser.username;
+    var message = fromUsername + ': ' + roomMessage.model.text;
+    return message;
+}
+
+function sendChatOnKeywordMatch(phone, roomMessage) {
+    getUserData(phone)
+        .then(function(data) {
+            if(shouldSendSms(data, roomMessage)) {
+                var message = buildMessageFromGitterToSms(data, roomMessage);
+                sendChatToPhone(phone, message);
+            }
+        });
+}
+function subscribe(room, phone) {
+    logger.info('subscribe: ' + room.name + ' <=> ' + phone);
+    // same as room.subscribe() but only for chatMessages
+    var resourcePath = '/api/v1/rooms/' + room.id + '/chatMessages';
+    var events = room.faye.subscribeTo(resourcePath, resourcePath);
+    events.on(resourcePath, function(msg) {
+        if(msg.operation !== 'create') {
+            return;
+        }
+
+        var fromUsername = msg.model.fromUser.username;
+        var message = fromUsername + ': ' + msg.model.text;
+        logger.info('onchat: user = ' + phone + ', msg = ' + message);
+
+        sendChatOnKeywordMatch(phone, msg);
+    });
+    return {id: room.id, name: room.name};
 }
 
 function sendChatToPhone(phone, msg) {
@@ -158,7 +191,7 @@ function gitterRoomToUiRoom(room) {
             name: room.name
     };
 }
-server.get('/gitter/home', function (req, res, done) {
+server.get('/gitter/home', function (req, res) {
     var phone = req.session.phone;
     logger.info('home: going home for phone - ' + phone);
     getUserData(phone, req.session)
@@ -166,7 +199,6 @@ server.get('/gitter/home', function (req, res, done) {
             if(!data) {
                 logger.info('home: redirecting to /gitter');
                 res.redirect('/gitter');
-                done();
                 return;
             }
             logger.info('home: doing gitter stuff');
@@ -186,8 +218,7 @@ server.get('/gitter/home', function (req, res, done) {
                 })
                 .catch(function(err) {
                     logger.error('home: ' + err);
-                })
-                .then(done);
+                });
         }).catch(function(err) {
             logger.error('home: caught => ' + err);
         });
@@ -227,22 +258,7 @@ server.get('/gitter/rooms/:roomId/subscribe', function(req, res, done) {
         return data.gitter.rooms
             .find(roomId)
             .then(function(room) {
-                // same as room.subscribe() but only for chatMessages
-                var resourcePath = '/api/v1/rooms/' + roomId + '/chatMessages';
-                var events = room.faye.subscribeTo(resourcePath, resourcePath);
-                events.on(resourcePath, function(msg) {
-                    if(msg.operation !== 'create') {
-                        return;
-                    }
-
-                    console.log(util.inspect(msg));
-                    var message = msg.model.fromUser.username + ': ' + msg.model.text;
-
-                    if(shouldSendSms(data.phone, msg)) {
-                        sendChatToPhone(data.phone, message);
-                    }
-                });
-                return {id: room.id, name: room.name, mentionOnly: true};
+                return subscribe(room, phone);
             })
             .then(function(activeRoom) {
                 var oldActive = data.activeRoom;
@@ -400,7 +416,7 @@ server.get('/gitter/phone/:phone/auth', function (req, res, done) {
 });
 
 server.delete('/gitter/phone/:phone', function(req,res) {
-    console.log('deleting user content for ' + req.params.phone);
+    logger.info('deleting user content for ' + req.params.phone);
     deleteUserData(req.params.phone, req.session);
     res.status(200).send('OK');
     res.end();
@@ -416,8 +432,25 @@ server.get('/gitter/auth/finish',
     }
 );
 
+function reconnectRoomSubscriptions() {
+    logger.info('reconnect: start');
+    db.retrieveAll()
+        .then(function(users) {
+            _.filter(users, function(u) {
+                return !!u.activeRoom;
+            }).forEach(function(u) {
+                u.gitter
+                    .rooms
+                    .find(u.activeRoom.id)
+                    .then(function(r){
+                        subscribe(r, u.phone);
+                    });
+            });
+        });
+}
 var port = process.env['PORT'] || 8121;
 
 server.listen(port, function() {
-    console.log('server listening on port ' + port);
+    logger.info('server listening on port ' + port);
+    reconnectRoomSubscriptions();
 });
