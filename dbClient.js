@@ -63,9 +63,8 @@ function persistUserData(phone, userData) {
             return Q.ninvoke(c, 'update',
                     {phone: phone}, data, {upsert: true});
         })
-        .then(function(data) {
-            logger.info('got user record: ' + util.inspect(data));
-            return data && data[0];
+        .then(function() {
+            logger.info('persisted user record.');
         });
 }
 
@@ -92,7 +91,6 @@ function retrieveAllUserData() {
         })
         .then(function(data) {
             logger.info('found ' + data.length + ' user records');
-            
             return data.map(deserializeToUserObject);
         });
 }
