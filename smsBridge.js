@@ -171,7 +171,8 @@ server.post('/sms', function(req,res){
                     });
             }
         });
-    res.end('<Response></Response>');
+    res.setHeader('Content-Type', 'text/xml');
+    res.end('<?xml version="1.0" encoding="UTF-8"?><Response></Response>');
 });
 
 server.get('/', function (req, res) {
@@ -212,6 +213,9 @@ server.get('/gitter/home', function (req, res) {
 
                     res.render('roomlist.mustache', {
                         keywords: kw.join(', '),
+                        signature: data.signature,
+                        smsFormat: data.smsFormat,
+                        phone: phone,
                         activeRoom: data.activeRoom,
                         rooms: rooms
                     });
@@ -223,7 +227,26 @@ server.get('/gitter/home', function (req, res) {
             logger.error('home: caught => ' + err);
         });
 });
+server.post('/gitter/settings', function(req,res) {
+    var phone = req.body.phone;
+    getUserData(phone, req.session).then(function(data) {
+        if(!data) {
+            res.redirect('/gitter');
+            return;
+        }
 
+        var keywords = req.body.keywords;
+        var signature = req.body.signature;
+        var smsFormat = req.body.smsFormat;
+        data.keywords = _.map(keywords.split(','), function(k) { return k.trim(); });
+        data.signature = signature;
+        data.smsFormat = smsFormat;
+
+        persistUserData(data.phone, data, req.session);
+
+        res.redirect('/gitter/home');
+    });
+});
 server.post('/gitter/keywords', function(req,res) {
     var phone = req.body.phone;
     getUserData(phone, req.session).then(function(data) {
@@ -308,22 +331,8 @@ server.get('/test/:page', function(req, res) {
     case 'login':
         res.render('login.mustache', {phone: '1231231234'});
         break;
-    case 'nohome':
-        res.render('roomlist.mustache', {
-            rooms: [
-                {name:'test/room1', id: 'testing1'},
-                {name:'test/room2', id: 'testing2'},
-                {name:'test/room3', id: 'testing3'},
-                {name:'test/room4', id: 'testing4'},
-                {name:'test/room5', id: 'testing5'},
-                {name:'test/room6', id: 'testing6'},
-                {name:'test/room7', id: 'testing7'},
-                {name:'test/room8', id: 'testing8'},
-                {name:'test/room9', id: 'testing9'},
-                {name:'test/room10', id: 'testing10'}
-            ],
-            keywords: '@user, alert, ping'
-        });
+    case 'verify':
+        res.render('verify.mustache', {phone: '1231231234'});
         break;
     case 'home':
         res.render('roomlist.mustache', {
@@ -340,23 +349,76 @@ server.get('/test/:page', function(req, res) {
                 {name:'test/room10', id: 'testing10'}
             ],
             activeRoom: { name: 'test/active'},
+            activeRoomId: 'testing8',
             keywords: '@user, alert, ping'
         });
         break;
     }
 });
+
+function genSecret() {
+    return '' + (Math.trunc(Math.random()*89999) + 10000);
+}
+
+var verifier = {};
+
+function verifyCredentials(phone, key, now) {
+    var ok = true;
+    var inData = {key: key, exp: now};
+
+    var vdata = verifier[phone];
+    logger.info('input:    ' + util.inspect(inData));
+    logger.info('verifier: ' + util.inspect(vdata));
+    ok = ok && !!vdata
+            && (vdata.exp > now)
+            && (vdata.key === key);
+    delete verifier[phone];
+    return ok;
+}
+
+server.get('/gitter/login', function(req,res) {
+    var phone = req.query.phone;
+    logger.info('login: phone = ' + phone);
+    var regex = new RegExp('\\d{10}');
+    if (!regex.test(phone)) {
+        res.redirect('/gitter?m=bad%20creds');
+        return;
+    }
+    var secret = genSecret();
+    var exp = new Date();
+    exp.setMinutes(exp.getMinutes() + 3);
+    verifier[phone] = {
+        key: secret,
+        exp: exp
+    };
+    sendChatToPhone(phone, 'verification key is: ' + secret);
+    res.render('verify.mustache', {phone: phone});
+});
 server.post('/gitter/login', function(req, res) {
     var phone = req.body.phone;
+    var key = req.body.key;
 
     if(!phone) {
-        res.status(400).send('Missing phone number');
-        res.end();
+        logger.info('login: nophone');
+        res.redirect('/gitter?m=bad%20creds');
         return;
     }
     var regex = new RegExp('\\d{10}');
     if (!regex.test(phone)) {
-        res.status(400).send('Phone number must be 10 digits, no seperators. Ex: 1110001234');
-        res.end();
+        logger.info('login: badphone = ' + phone);
+        res.redirect('/gitter?m=bad%20creds');
+        return;
+    }
+    if(!key) {
+        logger.info('login: nokey');
+        res.redirect('/gitter?m=bad%20creds');
+        return;
+    }
+
+    var now = new Date();
+    if(!verifyCredentials(phone, key, now)) {
+        logger.info('login: badkey');
+        res.redirect('/gitter?m=bad%20creds');
         return;
     }
 
@@ -364,16 +426,16 @@ server.post('/gitter/login', function(req, res) {
         logger.info('login: back from getting data!');
         if(!data) {
             logger.error('login: user data is null...');
-            res.status(401).send('Phone not registered, please register to log in.');
-            res.end();
+            res.redirect('/gitter?m=not%20registered');
             return;
         }
 
         logger.info('login: found user data');
         req.session.phone = phone;
-        res.status(200).redirect('/gitter/home');
+        res.redirect('/gitter/home');
     }).catch(function(err){
         logger.error('login: get user data threw!');
+        res.redirect('/gitter');
     });
 });
 

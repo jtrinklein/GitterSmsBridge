@@ -1,63 +1,19 @@
-* {
-    font-family: Arial, Helvetica, Sans-Serif;
-    font-size: 12pt;
-}
-.row-label {
-    width: 100px;
-    display: inline-block;
-    text-align: right;
-}
-.row-content {
-    margin-left: 10px;
-}
 .small-note {
-    font-size: 8pt;
-    margin: auto;
-    width: 88%;
-}
-.button {
-    background-color: white;
-    padding: 0 4px;
-    border: 2px outset #999;
-    text-decoration: none;
-    color: #444;
-}
-.button.subscribe {
-    background-color: #CFF;
-}
-.button.unsubscribe {
-    background-color: #F9A;
-}
-.subscribed {
-    margin: 30px;
-    border: 1px solid grey;
-    width: 50%;
-}
-.subscribed-row {
-    width: 100%;
-    margin: 4px 0;
-    display: inline-block;
-}
-.subscribed-row .button i {
-    padding-right: 5px;
-    color: black;
-}
-.room-row {
-    padding: 8px 3px;
-}
-.room-row.odd {
-    background-color: #F2F9FB;
-}
-.room-name {
-    font-family: monospace;
-}
-.room-row .room-name {
-    display: inline-flex;
-    padding-right: 10px;
-    min-width: 225px;
+    font-size: 0.8em;
 }
 
-.button:hover {
-    border-width: 3px;
+form.settings {
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 20px;
+}
+.button,.button-primary {
+    margin-bottom: 0;
 }
 
+input {
+    margin-bottom: 0;
+}
+.pad-bottom {
+    padding-bottom: 10px;
+}

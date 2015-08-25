@@ -33,25 +33,42 @@ function serializeToDbObject(userData) {
         token: data.token,
         phone: data.phone,
         username: data.username,
-        keywords: (data.keywords || []).join(',')
+        keywords: (data.keywords || []).join(','),
+        signature: data.signature,
+        smsFormat: data.smsFormat
     };
 }
+function processDbObj(dbObj) {
+    switch (dbObj.version) {
+        case 1:
+            dbObj.smsFormat = '{from}: {text}';
+            dbObj.signature = '';
+            dbObj.version = 2;
+        default:
+            break;
+    }
 
+    dbObj.gitter = new Gitter(dbObj.token);
+    dbObj.keywords = (dbObj.keywords || '').split(',');
+    return {
+        version: dbObj.version,
+        phone: dbObj.phone,
+        token: dbObj.token,
+        username: dbObj.username,
+        gitter: dbObj.gitter,
+        keywords: dbObj.keywords,
+        activeRoom: dbObj.activeRoom,
+        signature: dbObj.signature,
+        smsFormat: dbObj.smsFormat
+    };
+}
 function deserializeToUserObject(dbObj) {
     if(!dbObj) {
         return null;
     }
 
-    var keywords = dbObj.keywords || '';
-    return {
-        version: dbObj.version,
-        token: dbObj.token,
-        activeRoom: dbObj.activeRoom,
-        gitter: new Gitter(dbObj.token),
-        phone: dbObj.phone,
-        username: dbObj.username,
-        keywords: keywords.split(',')
-    };
+    var user = processDbObj(dbObj);
+    return user;
 }
 
 function persistUserData(phone, userData) {
@@ -77,8 +94,9 @@ function retrieveUserData(phone) {
         })
         .then(function(data) {
             var user = data && data[0];
-            logger.info('got user record: ' + util.inspect(user));
-            return deserializeToUserObject(user);
+            var deserializedUser = deserializeToUserObject(user);
+            logger.info('got user record: ' + util.inspect(deserializedUser));
+            return deserializedUser;
         });
 }
 

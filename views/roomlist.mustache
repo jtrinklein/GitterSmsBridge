@@ -2,48 +2,99 @@
 <html lang="en">
     <head>
 
-        <link rel="stylesheet" type="text/css" href="/css/roomlist.css"/>
         <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.css" />
+        <link rel="stylesheet" type="text/css" href="/css/normalize.css"/>
+        <link rel="stylesheet" type="text/css" href="/css/skeleton.css"/>
+        <link rel="stylesheet" type="text/css" href="/css/roomlist.css"/>
     </head>
     <body>
-        <h3>Home</h3>
-        {{#activeRoom}}
-        <div class="subscribed">
-            <div class="subscribed-row">
-                <span class="row-label">Active Room: </span>
-                <span class="row-content room-name">{{name}}</span>
-            </div>
-            <div class="subscribed-row">
-                <span class="row-label">Actions: </span>
-                <span class="row-content">
-                    <a class="button unsubscribe" href="/gitter/rooms/{{id}}/unsubscribe">Unsubscribe</a>
-                </span>
-            </div>
-            <div class="subscribed-row">
-                <span class="row-label">Keywords: </span>
-                <span class="row-content">
-                    <div style="display: inline-block;">
-                        <form action="/gitter/keywords" method="POST">
-                            <input type="text" name="keywords" value="{{keywords}}"/>
-                            <button type="submit" class="button">Update</button>
-                        </form>
+        <div class="container">
+            <h3>Home</h3>
+            <div class="row">
+                <div class="container">
+                    <form class="settings" name="settings" method="POST" action="/gitter/settings">
+                        <input type="hidden" name="phone" value="{{phone}}"/>
+                    <div class="row">
+                        <div class="three columns">Active Room: </div>
+                        {{#activeRoom}}
+                        <div class="two columns">{{name}}</div>
+                        <div class="two columns">
+                            <a
+                                href="/gitter/rooms/{{id}}/unsubscribe"
+                                >Unsubscribe</a>
+                        </div>
+                        {{/activeRoom}}
+                    </div><!-- row --> 
+                    <div class="row pad-bottom">
+                        <div class="nine columns u-pull-right small-note">This is your currently subscribed room.</div>
                     </div>
-                    <div class="small-note">Keywords are comma ( , ) seperated. Clear to notify on all messages.</div>
-                </span>
-            </div>
+                    <div class="row">
+                        <div class="three columns">Keywords:</div>
+                        <div class="four columns">
+                            <input type="text" name="keywords" value="{{keywords}}"/>
+                        </div>
+                    </div><!-- row -->
+                    <div class="row pad-bottom">
+                        <div class="nine columns u-pull-right small-note">Keywords are comma ( , ) seperated. Clear to notify on all messages.</div>
+                    </div><!-- row -->
+                    <div class="row">
+                        <div class="three columns">Signature:</div>
+                        <div class="four columns">
+                            <textarea name="signature">{{signature}}</textarea>
+                        </div>
+                    </div><!-- row -->
+                    <div class="row pad-bottom">
+                        <div class="nine columns u-pull-right small-note">Will be appended to messages sent to gitter.</div>
+                    </div><!-- row -->
+                    <div class="row">
+                        <div class="three columns">SMS Format:</div>
+                        <div class="four columns">
+                            <input type="text" name="smsFormat" value="{{smsFormat}}"/>
+                        </div>
+                    </div><!-- row -->
+                    <div class="row pad-bottom">
+                        <div class="nine columns u-pull-right small-note">
+                            <div class="row">
+                                {time} - message time
+                            </div>
+                            <div class="row">
+                                {from} - username that sent message
+                            </div>
+                            <div class="row">
+                                {text} - message text (if unused, will be appended to the end)
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="three columns u-pull-right">
+                            <button class="button-primary" type="submit">Save Changes</button>
+                        </div>
+                    </div>
+                </form>
+                </div><!-- settings -->
+                
+            </div><!-- row -->
+        </div><!-- container -->
+        <div class="container">
+            <h3>Rooms:</h3>
+            <table class="u-full-width">
+                <thead>
+                    <tr><th>Action</th><th>Name</th></tr>
+                </thead>
+                <tbody>
+                    {{#rooms}}
+                    <tr>
+                        <td>
+                            <a class="button subscribe" href="/gitter/rooms/{{id}}/subscribe">Subscribe</a>
+                        </td>
+                        <td>
+                            {{name}}
+                        </td>
+                    </tr>
+                    {{/rooms}}
+                </tbody>
+            </table>
         </div>
-        {{/activeRoom}}
-        <h3>Available Rooms:</h3>
-        {{#rooms}}
-        <div class="room-row">
-            <span class="row-label">
-                <a class="button subscribe" href="/gitter/rooms/{{id}}/subscribe">Subscribe</a>
-            </span>
-            <span class="row-content">
-                <span class="room-name">{{name}}</span>
-            </span>
-        </div>
-        {{/rooms}}
     </body>
 </html>
 

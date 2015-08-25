@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="/css/layout.css"/>
+        <link rel="stylesheet" type="text/css" href="/css/login.css"/>
+        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.css" />
+    </head>
+    <body>
+        <div class="content">
+            <div class="quarter-wide"></div>
+            <div class="quarter-wide">
+                <div class="login">
+                    <h3>verification</h3>
+                    <form name="verify" method="POST" action="/gitter/login">
+                        <input type="hidden" name="phone" value="{{phone}}"/>
+                        <div class="input-row">
+                            <label>Enter key:</label><input type="text" name="key" required="" value="" title="Verification key">
+                        </div>
+                        <button type="submit">Submit</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
